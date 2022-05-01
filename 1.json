@@ -1,0 +1,26 @@
+{
+  "ok": true,
+  "result": [
+    {
+      "update_id": 588531390,
+      "message": {
+        "message_id": 8,
+        "from": {
+          "id": 263370035,
+          "is_bot": false,
+          "first_name": "adz",
+          "username": "adzeitor",
+          "language_code": "en"
+        },
+        "chat": {
+          "id": 263370035,
+          "first_name": "adz",
+          "username": "adzeitor",
+          "type": "private"
+        },
+        "date": 1651061027,
+        "text": "Djjdd        "
+      }
+    }
+  ]
+}
