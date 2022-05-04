@@ -29,7 +29,8 @@ func main() {
 			repo.Add(chatId, result.Message.Text)
 			items := repo.GetAllByUserId(chatId)
 			for i, item := range items {
-				message := fmt.Sprintf("%s Todo %d: %s", time.Now(), i, item.Message)
+
+				message := fmt.Sprintf("%s Todo %d: %s", time.Now().Format(time.ANSIC), i, item.Message)
 				telegrambot.TelegramSendMessage(chatId, message)
 			}
 		}
