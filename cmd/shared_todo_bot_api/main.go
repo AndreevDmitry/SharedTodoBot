@@ -1,12 +1,13 @@
 package main
 
 import (
-	"SharedToDoBot/repo"
-	"SharedToDoBot/telegrambot"
+	"SharedTodoBot/repo"
+	"SharedTodoBot/telegrambot"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 )
 
 func main() {
@@ -28,7 +29,7 @@ func main() {
 			repo.Add(chatId, result.Message.Text)
 			items := repo.GetAllByUserId(chatId)
 			for i, item := range items {
-				message := fmt.Sprintf("Message number %d: text is %s", i, item.Message)
+				message := fmt.Sprintf("%s Todo %d: %s", time.Now(), i, item.Message)
 				telegrambot.TelegramSendMessage(chatId, message)
 			}
 		}

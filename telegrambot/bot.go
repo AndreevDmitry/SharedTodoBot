@@ -62,7 +62,7 @@ func TelegramGetUpdates(offset int) TelegramUpdateResult {
 }
 
 func TelegramSendMessage(chatId int, message string) string {
-	// FIXME: Исправить проблему с амерсандами и вопросами
+	// FIXME: Исправить проблему с амперсандами и вопросами
 	resp, err := http.Get("https://api.telegram.org/bot5167317855:AAEWC1JzKxk7Wof8W51QcOgKB675vVRAVx4/SendMessage?text=" + message + "&chat_id=" + strconv.Itoa(chatId))
 	if err != nil {
 		panic(err)
