@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strconv"
-	"strings"
 )
 
 func telegramGetMe() {
@@ -63,14 +63,24 @@ func TelegramGetUpdates(offset int) TelegramUpdateResult {
 }
 
 func TelegramSendMessage(chatId int, message string) string {
-	// FIXME: Исправить проблему с амперсандами и вопросами
-	tempMessage := strings.Replace(message, "\n", " ", -1)
-	tempMessage = strings.Replace(tempMessage, "&", " ", -1)
-	println(tempMessage)
-	resp, err := http.Get("https://api.telegram.org/bot5167317855:AAEWC1JzKxk7Wof8W51QcOgKB675vVRAVx4/SendMessage?text=" + tempMessage + "&chat_id=" + strconv.Itoa(chatId))
+	botToken := os.Getenv("BOT_TOKEN")
+
+	client := &http.Client{}
+	resp, err := client.Get("https://api.telegram.org")
 	if err != nil {
 		panic(err)
 	}
+
+	req, err := http.NewRequest("GET", "https://api.telegram.org/bot"+botToken+"/SendMessage", nil)
+	if err != nil {
+		panic(err)
+	}
+	q := req.URL.Query()
+	q.Add("text", message)
+	q.Add("chat_id", strconv.Itoa(chatId))
+	req.URL.RawQuery = q.Encode()
+	fmt.Println(req.URL.String())
+	resp, err = client.Do(req)
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
