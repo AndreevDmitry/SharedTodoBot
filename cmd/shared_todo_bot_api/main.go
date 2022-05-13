@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -14,9 +15,13 @@ func main() {
 	fmt.Println("Hello world")
 	lastOffset := 0
 
+	botToken := os.Getenv("BOT_TOKEN")
+
+	bot := telegrambot.NewWithTimeout(botToken, 30)
+
 	go func() {
 		for {
-			updates := telegrambot.TelegramGetUpdates(lastOffset)
+			updates := bot.GetUpdates(lastOffset)
 			fmt.Println((updates))
 			if len(updates.Result) == 0 {
 				continue
@@ -31,7 +36,8 @@ func main() {
 			for i, item := range items {
 
 				message := fmt.Sprintf("%s Todo %d: %s", time.Now().Format(time.ANSIC), i, item.Message)
-				telegrambot.TelegramSendMessage(chatId, message)
+				//telegrambot.TelegramSendMessage(botConfig, chatId, message)
+				bot.SendMessage(chatId, message)
 			}
 		}
 	}()

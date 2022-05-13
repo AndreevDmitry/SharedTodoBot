@@ -2,30 +2,33 @@ package telegrambot
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strconv"
 )
 
-func telegramGetMe() {
-	resp, err := http.Get("https://api.telegram.org/bot5167317855:AAEWC1JzKxk7Wof8W51QcOgKB675vVRAVx4/getMe")
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(string(body))
+type Bot struct {
+	Token   string
+	Timeout int
 }
 
-type TelegramUpdateResult struct {
-	Ok     bool
-	Result []TelegramUpdate
+func New(token string) Bot {
+	return NewWithTimeout(token, 30)
+}
+
+func NewWithTimeout(token string, timeout int) Bot {
+	return Bot{
+		Token:   token,
+		Timeout: timeout,
+	}
+}
+
+func (bot Bot) SendMessage(chatId int, message string) {
+	bot.get("/SendMessage", []string{"text", "chat_id"}, []string{message, strconv.Itoa(chatId)})
+}
+
+type TelegramMessageChat struct {
+	Id int
 }
 
 type TelegramMessage struct {
@@ -34,59 +37,43 @@ type TelegramMessage struct {
 	Chat      TelegramMessageChat
 }
 
-type TelegramMessageChat struct {
-	Id int
-}
-
 type TelegramUpdate struct {
 	UpdateId int             `json:"update_id"`
 	Message  TelegramMessage // chat
 	// message
 }
 
-func TelegramGetUpdates(offset int) TelegramUpdateResult {
-	resp, err := http.Get("https://api.telegram.org/bot5167317855:AAEWC1JzKxk7Wof8W51QcOgKB675vVRAVx4/getUpdates?timeout=30&offset=" + strconv.Itoa(offset))
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
+type TelegramUpdateResult struct {
+	Ok     bool
+	Result []TelegramUpdate
+}
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		panic(err)
-	}
-
+func (bot Bot) GetUpdates(offset int) TelegramUpdateResult {
+	body := bot.get("/getUpdates", []string{"timeout", "offset"}, []string{strconv.Itoa(bot.Timeout), strconv.Itoa(offset)})
 	var updateResult TelegramUpdateResult
 	json.Unmarshal(body, &updateResult)
-
 	return updateResult
 }
 
-func TelegramSendMessage(chatId int, message string) string {
-	botToken := os.Getenv("BOT_TOKEN")
+func (bot Bot) get(method string, keys []string, values []string) []byte {
+	req, err := http.NewRequest("GET", "https://api.telegram.org/bot"+bot.Token+method, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	q := req.URL.Query()
+	for i := range keys {
+		q.Add(keys[i], values[i])
+	}
+	req.URL.RawQuery = q.Encode()
 
 	client := &http.Client{}
-	resp, err := client.Get("https://api.telegram.org")
-	if err != nil {
-		panic(err)
-	}
-
-	req, err := http.NewRequest("GET", "https://api.telegram.org/bot"+botToken+"/SendMessage", nil)
-	if err != nil {
-		panic(err)
-	}
-	q := req.URL.Query()
-	q.Add("text", message)
-	q.Add("chat_id", strconv.Itoa(chatId))
-	req.URL.RawQuery = q.Encode()
-	fmt.Println(req.URL.String())
-	resp, err = client.Do(req)
+	resp, err := client.Do(req)
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		panic(err)
 	}
-
-	return string(body)
+	return body
 }
