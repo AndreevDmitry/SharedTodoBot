@@ -23,8 +23,8 @@ func NewWithTimeout(token string, timeout int) Bot {
 	}
 }
 
-func (bot Bot) SendMessage(chatId int, message string) {
-	bot.get("/SendMessage", []string{"text", "chat_id"}, []string{message, strconv.Itoa(chatId)})
+func (bot Bot) SendMessage(chatId string, message string) {
+	bot.get("/SendMessage", []string{"text", "chat_id"}, []string{message, chatId})
 }
 
 type TelegramMessageChat struct {
@@ -56,6 +56,10 @@ func (bot Bot) GetUpdates(offset int) TelegramUpdateResult {
 }
 
 func (bot Bot) get(method string, keys []string, values []string) []byte {
+	if len(keys) != len(values) {
+		panic("Then number of keys is not equal with the number of values")
+	}
+
 	req, err := http.NewRequest("GET", "https://api.telegram.org/bot"+bot.Token+method, nil)
 	if err != nil {
 		panic(err)

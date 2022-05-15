@@ -8,11 +8,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
 func main() {
-	fmt.Println("Hello world")
+	fmt.Println("SharedTodoBot running...")
 	lastOffset := 0
 
 	botToken := os.Getenv("BOT_TOKEN")
@@ -29,14 +30,12 @@ func main() {
 
 			result := updates.Result[0]
 			lastOffset = result.UpdateId + 1
-			chatId := result.Message.Chat.Id
+			chatId := strconv.Itoa(result.Message.Chat.Id)
 
 			repo.Add(chatId, result.Message.Text)
 			items := repo.GetAllByUserId(chatId)
 			for i, item := range items {
-
 				message := fmt.Sprintf("%s Todo %d: %s", time.Now().Format(time.ANSIC), i, item.Message)
-				//telegrambot.TelegramSendMessage(botConfig, chatId, message)
 				bot.SendMessage(chatId, message)
 			}
 		}
