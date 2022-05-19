@@ -37,12 +37,16 @@ func main() {
 				continue
 			}
 
-			repo.Add(chatId, result.Message.Text)
-			items := repo.GetAllByUserId(chatId)
-			for i, item := range items {
-				message := fmt.Sprintf("%s Todo %d: %s", time.Now().Format(time.ANSIC), i, item.Message)
-				bot.SendMessage(chatId, message)
+			if result.Message.Text == "/list" {
+				items := repo.GetAllByUserId(chatId)
+				for i, item := range items {
+					message := fmt.Sprintf("%s Todo %d: %s", time.Now().Format(time.ANSIC), i, item.Message)
+					bot.SendMessage(chatId, message)
+				}
+				continue
 			}
+
+			repo.Add(chatId, result.Message.Text)
 		}
 	}()
 
