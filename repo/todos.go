@@ -20,6 +20,10 @@ func Add(userId string, message string) {
 	db.Put(userId, oldmessage+message)
 }
 
+func DeleteAll(userId string) {
+	db.Put(userId, "")
+}
+
 func GetAllByUserId(userId string) []TodoItem {
 	var result []TodoItem
 

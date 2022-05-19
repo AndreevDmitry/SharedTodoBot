@@ -32,6 +32,11 @@ func main() {
 			lastOffset = result.UpdateId + 1
 			chatId := strconv.Itoa(result.Message.Chat.Id)
 
+			if result.Message.Text == "/delete_all" {
+				repo.DeleteAll(chatId)
+				continue
+			}
+
 			repo.Add(chatId, result.Message.Text)
 			items := repo.GetAllByUserId(chatId)
 			for i, item := range items {
