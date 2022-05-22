@@ -39,6 +39,11 @@ func main() {
 			continue
 		}
 
+		if result.Message.Text == "/done" {
+			handleDone(chatId, bot)
+			continue
+		}
+
 		handleSave(chatId, result)
 	}
 }
@@ -52,7 +57,13 @@ func handleSave(chatId string, result telegrambot.TelegramUpdate) {
 func handleList(chatId string, bot telegrambot.Bot) {
 	user := repo.Get(chatId)
 	for i, todo := range user.Todos {
-		message := fmt.Sprintf("%s Todo %d: %s", time.Now().Format(time.ANSIC), i, todo.Message)
+		//message := fmt.Sprintf("%s Todo %d: %s", time.Now().Format(time.ANSIC), i, todo.Message)
+		var message string
+		if todo.IsDone {
+			message = fmt.Sprintf("%s ✅ %d: %s", todo.Time.Format(time.Kitchen), i, todo.Message)
+		} else {
+			message = fmt.Sprintf("%s  %d: %s", todo.Time.Format(time.Kitchen), i, todo.Message)
+		}
 		bot.SendMessage(chatId, message)
 	}
 }
@@ -60,5 +71,11 @@ func handleList(chatId string, bot telegrambot.Bot) {
 func handleDeleteAll(chatId string) {
 	user := repo.Get(chatId)
 	user.Todos = []domain.TodoItem{}
+	repo.Save(chatId, user)
+}
+
+func handleDone(chatId string, bot telegrambot.Bot) {
+	user := repo.Get(chatId)
+	user.Done(0)
 	repo.Save(chatId, user)
 }
