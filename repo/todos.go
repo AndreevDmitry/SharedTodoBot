@@ -1,41 +1,35 @@
 package repo
 
 import (
+	"SharedTodoBot/domain"
+	"encoding/json"
 	"github.com/AndreevDmitry/gobitcask"
 	"os"
 )
-
-type TodoItem struct {
-	UserId  string
-	Message string
-}
 
 var homedir, _ = os.UserHomeDir()
 var db = gobitcask.New(homedir + "/.SharedTodoBotDb")
 
 //var todos []TodoItem
 
-func Add(userId string, message string) {
-	oldmessage, _ := db.Get(userId)
-	db.Put(userId, oldmessage+message)
+func Save(userId string, todos domain.User) {
+	encoded, _ := json.Marshal(todos)
+	db.Put(userId, string(encoded))
 }
 
-func DeleteAll(userId string) {
-	db.Put(userId, "")
-}
-
-func GetAllByUserId(userId string) []TodoItem {
-	var result []TodoItem
-
-	message, _ := db.Get(userId)
-	item := TodoItem{
-		UserId:  userId,
-		Message: message,
+func Get(userId string) domain.User {
+	rawUser, err := db.Get(userId)
+	if err != nil && err.Error() == "Bitcask: record not found" {
+		return domain.NewUser(userId)
 	}
-	result = append(result, item)
-	return result
-}
+	if err != nil {
+		panic(err)
+	}
 
-func GetAll() []TodoItem {
-	return nil
+	var user domain.User
+	err = json.Unmarshal([]byte(rawUser), &user)
+	if err != nil {
+		panic(err)
+	}
+	return user
 }
