@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"fmt"
 )
 
 type Bot struct {
@@ -46,12 +47,17 @@ type TelegramUpdate struct {
 type TelegramUpdateResult struct {
 	Ok     bool
 	Result []TelegramUpdate
+	Description string  
 }
 
 func (bot Bot) GetUpdates(offset int) TelegramUpdateResult {
 	body := bot.get("/getUpdates", []string{"timeout", "offset"}, []string{strconv.Itoa(bot.Timeout), strconv.Itoa(offset)})
 	var updateResult TelegramUpdateResult
 	json.Unmarshal(body, &updateResult)
+	if !updateResult.Ok {
+		fmt.Println("Telegram getUpdates result:", updateResult.Description)
+	}
+	
 	return updateResult
 }
 

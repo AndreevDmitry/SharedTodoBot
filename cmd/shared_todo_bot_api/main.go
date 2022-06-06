@@ -20,7 +20,7 @@ func main() {
 
 	for {
 		updates := bot.GetUpdates(lastOffset)
-		fmt.Println((updates))
+		fmt.Println(updates)
 		if len(updates.Result) == 0 {
 			continue
 		}
