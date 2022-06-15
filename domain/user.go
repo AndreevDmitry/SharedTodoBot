@@ -1,6 +1,8 @@
 package domain
 
-import "time"
+import (
+	"time"
+)
 
 type TodoItem struct {
 	UserId  string
@@ -21,8 +23,12 @@ func NewUser(userId string) User {
 	return user
 }
 
-func (user *User) Done(number int) {
-	user.Todos[number].IsDone = true
+func (user *User) SetStatus(number int, status bool) string {
+	if number < len(user.Todos) {
+		user.Todos[number].IsDone = status
+		return "Ok"
+	}
+	return "Out of range"
 }
 
 func (user *User) AddTodo(message string) {

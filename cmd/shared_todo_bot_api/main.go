@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -39,8 +40,23 @@ func main() {
 			continue
 		}
 
-		if result.Message.Text == "/done" {
-			handleDone(chatId, bot)
+		if strings.HasPrefix(result.Message.Text, "/done ") {
+			if number, err := strconv.Atoi(result.Message.Text[len("/done "):len(result.Message.Text)]); err == nil {
+				doneStatus := handleDone(chatId, bot, number, true)
+				bot.SendMessage(chatId, doneStatus)
+			} else {
+				bot.SendMessage(chatId, "Please, pass the Todo number from /list")
+			}
+			continue
+		}
+
+		if strings.HasPrefix(result.Message.Text, "/undone ") {
+			if number, err := strconv.Atoi(result.Message.Text[len("/undone "):len(result.Message.Text)]); err == nil {
+				doneStatus := handleDone(chatId, bot, number, false)
+				bot.SendMessage(chatId, doneStatus)
+			} else {
+				bot.SendMessage(chatId, "Please, pass the Todo number from /list")
+			}
 			continue
 		}
 
@@ -74,8 +90,9 @@ func handleDeleteAll(chatId string) {
 	repo.Save(chatId, user)
 }
 
-func handleDone(chatId string, bot telegrambot.Bot) {
+func handleDone(chatId string, bot telegrambot.Bot, number int, done bool) string {
 	user := repo.Get(chatId)
-	user.Done(0)
+	result := user.SetStatus(number, done)
 	repo.Save(chatId, user)
+	return result
 }
