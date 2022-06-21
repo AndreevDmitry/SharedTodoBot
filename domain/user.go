@@ -24,7 +24,7 @@ func NewUser(userId string) User {
 }
 
 func (user *User) SetStatus(number int, status bool) string {
-	if number < len(user.Todos) {
+	if number >= 0 && number < len(user.Todos) {
 		user.Todos[number].IsDone = status
 		return "Ok"
 	}

@@ -4,10 +4,12 @@ import (
 	"SharedTodoBot/domain"
 	"SharedTodoBot/repo"
 	"SharedTodoBot/telegrambot"
+	"bytes"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 )
 
@@ -52,8 +54,8 @@ func main() {
 
 		if strings.HasPrefix(result.Message.Text, "/undone ") {
 			if number, err := strconv.Atoi(result.Message.Text[len("/undone "):len(result.Message.Text)]); err == nil {
-				doneStatus := handleDone(chatId, bot, number, false)
-				bot.SendMessage(chatId, doneStatus)
+				undoneStatus := handleDone(chatId, bot, number, false)
+				bot.SendMessage(chatId, undoneStatus)
 			} else {
 				bot.SendMessage(chatId, "Please, pass the Todo number from /list")
 			}
@@ -71,17 +73,28 @@ func handleSave(chatId string, result telegrambot.TelegramUpdate) {
 }
 
 func handleList(chatId string, bot telegrambot.Bot) {
-	user := repo.Get(chatId)
-	for i, todo := range user.Todos {
-		//message := fmt.Sprintf("%s Todo %d: %s", time.Now().Format(time.ANSIC), i, todo.Message)
-		var message string
-		if todo.IsDone {
-			message = fmt.Sprintf("%s ✅ %d: %s", todo.Time.Format(time.Kitchen), i, todo.Message)
-		} else {
-			message = fmt.Sprintf("%s  %d: %s", todo.Time.Format(time.Kitchen), i, todo.Message)
-		}
-		bot.SendMessage(chatId, message)
+	type Message struct {
+		Time       string
+		Todo       domain.TodoItem
+		TodoNumber int
 	}
+	text := `{{.Time}} {{.TodoNumber}}: {{.Todo.Message}} {{if .Todo.IsDone}} ✅ {{end}}
+`
+	t, err := template.New("Todos").Parse(text)
+	if err != nil {
+		panic(err)
+	}
+
+	user := repo.Get(chatId)
+	var output bytes.Buffer
+	var message Message
+	for i, todo := range user.Todos {
+		message.Todo = todo
+		message.Time = todo.Time.Format(time.Kitchen)
+		message.TodoNumber = i + 1
+		t.Execute(&output, message)
+	}
+	bot.SendMessage(chatId, output.String())
 }
 
 func handleDeleteAll(chatId string) {
@@ -92,7 +105,7 @@ func handleDeleteAll(chatId string) {
 
 func handleDone(chatId string, bot telegrambot.Bot, number int, done bool) string {
 	user := repo.Get(chatId)
-	result := user.SetStatus(number, done)
+	result := user.SetStatus(number-1, done)
 	repo.Save(chatId, user)
 	return result
 }
