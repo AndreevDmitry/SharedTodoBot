@@ -32,13 +32,38 @@ func main() {
 		lastOffset = result.UpdateId + 1
 		chatId := strconv.Itoa(result.Message.Chat.Id)
 
+		if strings.HasPrefix(result.Message.Text, "/delete ") {
+			if number, err := strconv.Atoi(result.Message.Text[len("/delete "):len(result.Message.Text)]); err == nil {
+				deleteStatus := handleActive(chatId, bot, number, false)
+				bot.SendMessage(chatId, deleteStatus)
+			} else {
+				bot.SendMessage(chatId, "Please, pass the Todo number from /list")
+			}
+			continue
+		}
+
+		if strings.HasPrefix(result.Message.Text, "/restore ") {
+			if number, err := strconv.Atoi(result.Message.Text[len("/restore "):len(result.Message.Text)]); err == nil {
+				restoreStatus := handleActive(chatId, bot, number, true)
+				bot.SendMessage(chatId, restoreStatus)
+			} else {
+				bot.SendMessage(chatId, "Please, pass the Todo number from /list")
+			}
+			continue
+		}
+
 		if result.Message.Text == "/delete_all" {
 			handleDeleteAll(chatId)
 			continue
 		}
 
 		if result.Message.Text == "/list" {
-			handleList(chatId, bot)
+			handleList(chatId, bot, true)
+			continue
+		}
+
+		if result.Message.Text == "/list_deleted" {
+			handleList(chatId, bot, false)
 			continue
 		}
 
@@ -72,7 +97,7 @@ func handleSave(chatId string, result telegrambot.TelegramUpdate) {
 	repo.Save(chatId, user)
 }
 
-func handleList(chatId string, bot telegrambot.Bot) {
+func handleList(chatId string, bot telegrambot.Bot, active bool) {
 	type Message struct {
 		Time       string
 		Todo       domain.TodoItem
@@ -89,12 +114,22 @@ func handleList(chatId string, bot telegrambot.Bot) {
 	var output bytes.Buffer
 	var message Message
 	for i, todo := range user.Todos {
+		if active != todo.IsActive {
+			continue
+		}
 		message.Todo = todo
 		message.Time = todo.Time.Format(time.Kitchen)
 		message.TodoNumber = i + 1
 		t.Execute(&output, message)
 	}
 	bot.SendMessage(chatId, output.String())
+}
+
+func handleActive(chatId string, bot telegrambot.Bot, number int, active bool) string {
+	user := repo.Get(chatId)
+	result := user.SetActiveStatus(number-1, active)
+	repo.Save(chatId, user)
+	return result
 }
 
 func handleDeleteAll(chatId string) {
@@ -105,7 +140,7 @@ func handleDeleteAll(chatId string) {
 
 func handleDone(chatId string, bot telegrambot.Bot, number int, done bool) string {
 	user := repo.Get(chatId)
-	result := user.SetStatus(number-1, done)
+	result := user.SetDoneStatus(number-1, done)
 	repo.Save(chatId, user)
 	return result
 }

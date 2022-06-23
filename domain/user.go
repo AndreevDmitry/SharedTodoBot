@@ -5,10 +5,11 @@ import (
 )
 
 type TodoItem struct {
-	UserId  string
-	Time    time.Time
-	IsDone  bool
-	Message string
+	UserId   string
+	Time     time.Time
+	IsDone   bool
+	IsActive bool
+	Message  string
 }
 
 type User struct {
@@ -23,7 +24,7 @@ func NewUser(userId string) User {
 	return user
 }
 
-func (user *User) SetStatus(number int, status bool) string {
+func (user *User) SetDoneStatus(number int, status bool) string {
 	if number >= 0 && number < len(user.Todos) {
 		user.Todos[number].IsDone = status
 		return "Ok"
@@ -31,11 +32,20 @@ func (user *User) SetStatus(number int, status bool) string {
 	return "Out of range"
 }
 
+func (user *User) SetActiveStatus(number int, status bool) string {
+	if number >= 0 && number < len(user.Todos) {
+		user.Todos[number].IsActive = status
+		return "Ok"
+	}
+	return "Out of range"
+}
+
 func (user *User) AddTodo(message string) {
 	currentTodo := TodoItem{
-		UserId:  user.UserId,
-		Time:    time.Now(),
-		Message: message,
+		UserId:   user.UserId,
+		Time:     time.Now(),
+		IsActive: true,
+		Message:  message,
 	}
 	user.Todos = append(user.Todos, currentTodo)
 }
