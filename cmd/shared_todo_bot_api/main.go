@@ -34,7 +34,7 @@ func main() {
 
 		if strings.HasPrefix(result.Message.Text, "/delete ") {
 			if number, err := strconv.Atoi(result.Message.Text[len("/delete "):len(result.Message.Text)]); err == nil {
-				deleteStatus := handleActive(chatId, bot, number, false)
+				deleteStatus := handleDelete(chatId, bot, number)
 				bot.SendMessage(chatId, deleteStatus)
 			} else {
 				bot.SendMessage(chatId, "Please, pass the Todo number from /list")
@@ -44,7 +44,7 @@ func main() {
 
 		if strings.HasPrefix(result.Message.Text, "/restore ") {
 			if number, err := strconv.Atoi(result.Message.Text[len("/restore "):len(result.Message.Text)]); err == nil {
-				restoreStatus := handleActive(chatId, bot, number, true)
+				restoreStatus := handleRestore(chatId, bot, number)
 				bot.SendMessage(chatId, restoreStatus)
 			} else {
 				bot.SendMessage(chatId, "Please, pass the Todo number from /list")
@@ -69,7 +69,7 @@ func main() {
 
 		if strings.HasPrefix(result.Message.Text, "/done ") {
 			if number, err := strconv.Atoi(result.Message.Text[len("/done "):len(result.Message.Text)]); err == nil {
-				doneStatus := handleDone(chatId, bot, number, true)
+				doneStatus := handleDone(chatId, bot, number)
 				bot.SendMessage(chatId, doneStatus)
 			} else {
 				bot.SendMessage(chatId, "Please, pass the Todo number from /list")
@@ -79,7 +79,7 @@ func main() {
 
 		if strings.HasPrefix(result.Message.Text, "/undone ") {
 			if number, err := strconv.Atoi(result.Message.Text[len("/undone "):len(result.Message.Text)]); err == nil {
-				undoneStatus := handleDone(chatId, bot, number, false)
+				undoneStatus := handleUndone(chatId, bot, number)
 				bot.SendMessage(chatId, undoneStatus)
 			} else {
 				bot.SendMessage(chatId, "Please, pass the Todo number from /list")
@@ -125,9 +125,16 @@ func handleList(chatId string, bot telegrambot.Bot, active bool) {
 	bot.SendMessage(chatId, output.String())
 }
 
-func handleActive(chatId string, bot telegrambot.Bot, number int, active bool) string {
+func handleDelete(chatId string, bot telegrambot.Bot, number int) string {
 	user := repo.Get(chatId)
-	result := user.SetActiveStatus(number-1, active)
+	result := user.DeleteTodo(number - 1)
+	repo.Save(chatId, user)
+	return result
+}
+
+func handleRestore(chatId string, bot telegrambot.Bot, number int) string {
+	user := repo.Get(chatId)
+	result := user.RestoreTodo(number - 1)
 	repo.Save(chatId, user)
 	return result
 }
@@ -138,9 +145,16 @@ func handleDeleteAll(chatId string) {
 	repo.Save(chatId, user)
 }
 
-func handleDone(chatId string, bot telegrambot.Bot, number int, done bool) string {
+func handleDone(chatId string, bot telegrambot.Bot, number int) string {
 	user := repo.Get(chatId)
-	result := user.SetDoneStatus(number-1, done)
+	result := user.DoneTodo(number - 1)
+	repo.Save(chatId, user)
+	return result
+}
+
+func handleUndone(chatId string, bot telegrambot.Bot, number int) string {
+	user := repo.Get(chatId)
+	result := user.UndoneTodo(number - 1)
 	repo.Save(chatId, user)
 	return result
 }

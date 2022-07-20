@@ -24,17 +24,33 @@ func NewUser(userId string) User {
 	return user
 }
 
-func (user *User) SetDoneStatus(number int, status bool) string {
+func (user *User) DoneTodo(number int) string {
 	if number >= 0 && number < len(user.Todos) {
-		user.Todos[number].IsDone = status
+		user.Todos[number].IsDone = true
 		return "Ok"
 	}
 	return "Out of range"
 }
 
-func (user *User) SetActiveStatus(number int, status bool) string {
+func (user *User) UndoneTodo(number int) string {
 	if number >= 0 && number < len(user.Todos) {
-		user.Todos[number].IsActive = status
+		user.Todos[number].IsDone = false
+		return "Ok"
+	}
+	return "Out of range"
+}
+
+func (user *User) DeleteTodo(number int) string {
+	if number >= 0 && number < len(user.Todos) {
+		user.Todos[number].IsActive = false
+		return "Ok"
+	}
+	return "Out of range"
+}
+
+func (user *User) RestoreTodo(number int) string {
+	if number >= 0 && number < len(user.Todos) {
+		user.Todos[number].IsActive = true
 		return "Ok"
 	}
 	return "Out of range"
